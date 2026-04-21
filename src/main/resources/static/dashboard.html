@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚀 Performance Demo Dashboard</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ===== DESIGN SYSTEM ===== */
+    :root {
+      --bg-base: #0a0e1a;
+      --bg-card: #111827;
+      --bg-card2: #1a2235;
+      --border: #1f2d45;
+      --border-glow: #3b82f6;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== BACKGROUND ANIMATION ===== */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139, 92, 246, 0.08), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== LAYOUT ===== */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-left h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-left p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .server-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    /* ===== SERVER URL INPUT (config 1 chỗ duy nhất) ===== */
+    .server-config {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+    }
+
+    .server-config label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .server-config input {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      width: 220px;
+      transition: border-color 0.2s;
+    }
+
+    .server-config input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .btn-ping {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-ping:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .dot-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse-dot 2s infinite;
+    }
+
+    .dot-status.offline {
+      background: var(--accent-red);
+      box-shadow: 0 0 8px var(--accent-red);
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    /* ===== CONTROL PANEL ===== */
+    .control-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 20px;
+      align-items: end;
+    }
+
+    .warn-badge {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent-amber);
+      border-radius: 4px;
+      padding: 2px 7px;
+      vertical-align: middle;
+    }
+
+    .dom-notice {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+
+    .ctrl-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .ctrl-group input,
+    .ctrl-group select {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .ctrl-group input:focus,
+    .ctrl-group select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .ctrl-group select option {
+      background: #1a2235;
+    }
+
+    .btn-fire {
+      padding: 12px 28px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-fire:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-fire:active {
+      transform: translateY(0);
+    }
+
+    .btn-fire:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-clear {
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      background: transparent;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      margin-left: 10px;
+    }
+
+    .btn-clear:hover {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    .btn-group {
+      display: flex;
+      align-items: center;
+    }
+
+    /* ===== STATS ROW ===== */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .stat-card.highlight {
+      border-color: var(--accent-blue);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+
+    .stat-value.blue {
+      color: var(--accent-blue);
+    }
+
+    .stat-value.green {
+      color: var(--accent-green);
+    }
+
+    .stat-value.red {
+      color: var(--accent-red);
+    }
+
+    .stat-value.amber {
+      color: var(--accent-amber);
+    }
+
+    .stat-value.cyan {
+      color: var(--accent-cyan);
+    }
+
+    .stat-value.purple {
+      color: var(--accent-purple);
+    }
+
+    /* ===== PIPELINE VISUAL ===== */
+    .pipeline {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+
+    .pipeline-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .pipeline-stages {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .pipeline-stage {
+      flex: 1;
+      text-align: center;
+      padding: 14px 10px;
+      border-radius: 10px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      transition: all 0.3s;
+    }
+
+    .pipeline-stage.active {
+      border-color: var(--accent-blue);
+      background: rgba(59, 130, 246, 0.1);
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.2);
+    }
+
+    .pipeline-stage .stage-icon {
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .pipeline-stage .stage-name {
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .pipeline-stage .stage-count {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 800;
+      margin-top: 4px;
+      color: var(--accent-cyan);
+    }
+
+    .pipeline-arrow {
+      width: 40px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ===== DUAL COLUMNS ===== */
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .column-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      /* max-height đã bỏ → hiện tất cả request bắn vào */
+    }
+
+    .column-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .column-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .col-badge {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .col-badge.immediate {
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    .col-badge.background {
+      background: var(--accent-purple);
+      box-shadow: 0 0 8px var(--accent-purple);
+    }
+
+    .column-header h3 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .col-count {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 10px;
+      color: var(--text-secondary);
+    }
+
+    .request-list {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      /* overflow: visible → hiện hết tất cả card, không scroll ẩn */
+    }
+
+    .request-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .request-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .request-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    /* ===== REQUEST CARDS ===== */
+    .req-card {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      transition: all 0.3s;
+      animation: slide-in 0.3s ease forwards;
+    }
+
+    @keyframes slide-in {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .req-card.running {
+      border-color: var(--accent-blue);
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .req-card.done {
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .req-card.error {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .req-card.processing {
+      border-color: rgba(139, 92, 246, 0.4);
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .req-card.bg-done {
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .req-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .req-info {
+      min-width: 0;
+    }
+
+    .req-title {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .req-meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .req-status {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .status-badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .status-badge.pending {
+      background: rgba(100, 116, 139, 0.2);
+      color: var(--text-muted);
+    }
+
+    .status-badge.running {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--accent-blue);
+      animation: blink 1s infinite;
+    }
+
+    .status-badge.done {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent-green);
+    }
+
+    .status-badge.error {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--accent-red);
+    }
+
+    .status-badge.processing {
+      background: rgba(139, 92, 246, 0.2);
+      color: var(--accent-purple);
+      animation: blink 1.5s infinite;
+    }
+
+    .status-badge.bg-done {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent-green);
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.5
+      }
+    }
+
+    .req-time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-amber);
+    }
+
+    /* ===== SPINNER ===== */
+    .spinner-sm {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(59, 130, 246, 0.2);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .spinner-sm.purple {
+      border: 2px solid rgba(139, 92, 246, 0.2);
+      border-top-color: var(--accent-purple);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar-outer {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      border-radius: 100px;
+      width: 0%;
+      background: linear-gradient(90deg, #3b82f6, #6366f1);
+      transition: width 0.3s ease;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+    }
+
+    .progress-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      padding: 40px;
+      text-align: center;
+    }
+
+    .empty-state .icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+      opacity: 0.4;
+    }
+
+    .empty-state p {
+      font-size: 13px;
+    }
+
+    /* ===== TOAST ===== */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast-msg {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      animation: toast-in 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      max-width: 350px;
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateY(16px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @media (max-width: 900px) {
+      .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .columns {
+        grid-template-columns: 1fr;
+      }
+
+      .control-panel {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .control-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .pipeline-stages {
+        flex-direction: column;
+      }
+
+      .pipeline-arrow {
+        transform: rotate(90deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header>
+      <div class="header-left">
+        <h1>🚀 Performance Demo Dashboard</h1>
+        <p>Trực quan hóa hành trình từ Naive Sync → Non-Blocking Async</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <!-- 🔧 CẤU HÌNH SERVER URL TẠI ĐÂY — Chỉ cần đổi 1 chỗ này, toàn bộ Dashboard sẽ dùng URL mới -->
+        <div class="server-config">
+          <label>🌐 Server URL</label>
+          <input type="text" id="api-base-input" placeholder="http://localhost:8081"
+            title="Đổi server URL tại đây — tất cả API call sẽ dùng URL này" onchange="onServerUrlChange()"
+            onblur="onServerUrlChange()" />
+          <button class="btn-ping" onclick="checkServer()">🔌 Ping</button>
+        </div>
+        <div class="server-status">
+          <div class="dot-status" id="dot-status"></div>
+          <span id="server-label">Đang kiểm tra...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTROL PANEL -->
+    <div class="control-panel">
+      <div class="ctrl-group">
+        <label>Số lượng Requests</label>
+        <input type="number" id="req-count" value="20" min="1" />
+      </div>
+      <div class="ctrl-group">
+        <label>Số ảnh mỗi bài viết</label>
+        <input type="number" id="img-count" value="2" min="1" />
+      </div>
+      <div class="ctrl-group">
+        <label>Concurrency <span class="warn-badge">⚡ Quan Trọng</span></label>
+        <input type="number" id="concurrency" value="50" min="1" max="500"
+          title="Số request chạy song song cùng lúc. Đừng để quá cao — RAM trình duyệt sẽ nổ!" />
+      </div>
+      <div class="ctrl-group">
+        <label>Chế độ API</label>
+        <select id="api-mode">
+          <option value="async">🟢 ASYNC (Phản hồi ngay — Background xử lý)</option>
+          <option value="sync">🔴 SYNC (Block đến khi xong — Old way)</option>
+        </select>
+      </div>
+      <div class="btn-group">
+        <button class="btn-fire" id="btn-fire" onclick="startFireRequests()">
+          <span>⚡</span> Bắn Requests!
+        </button>
+        <button class="btn-clear" onclick="clearAll()">🗑️ Xóa</button>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress-bar-wrap" id="progress-wrap" style="display:none">
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="progress-inner"></div>
+      </div>
+      <span class="progress-label" id="progress-label">0 / 0</span>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">📤 Tổng Requests</div>
+        <div class="stat-value blue" id="s-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⚡ Đang chạy</div>
+        <div class="stat-value amber" id="s-running">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">✅ HTTP Thành công</div>
+        <div class="stat-value green" id="s-success">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">❌ HTTP Thất bại</div>
+        <div class="stat-value red" id="s-fail">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⏱ Avg HTTP Latency</div>
+        <div class="stat-value cyan" id="s-latency">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🔧 BG Hoàn thành</div>
+        <div class="stat-value purple" id="s-bg-done">0</div>
+      </div>
+    </div>
+
+    <!-- PIPELINE VISUAL -->
+    <div class="pipeline">
+      <div class="pipeline-title">🔄 Pipeline Xử Lý Realtime</div>
+      <div class="pipeline-stages">
+        <div class="pipeline-stage" id="p-queued">
+          <div class="stage-icon">📥</div>
+          <div class="stage-name">Đang chờ</div>
+          <div class="stage-count" id="p-queued-n">0</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage" id="p-http">
+          <div class="stage-icon">⚡</div>
+          <div class="stage-name">HTTP đang gửi</div>
+          <div class="stage-count" id="p-http-n">0</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage" id="p-http-done">
+          <div class="stage-icon">✅</div>
+          <div class="stage-name">HTTP xong (202)</div>
+          <div class="stage-count" id="p-http-done-n">0</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage" id="p-bg">
+          <div class="stage-icon">🔧</div>
+          <div class="stage-name">Background đang chạy</div>
+          <div class="stage-count" id="p-bg-n">0</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage" id="p-complete">
+          <div class="stage-icon">🎉</div>
+          <div class="stage-name">Hoàn toàn xong</div>
+          <div class="stage-count" id="p-complete-n">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DUAL COLUMNS -->
+    <div class="columns">
+      <!-- LEFT: Immediate HTTP Response -->
+      <div class="column-panel">
+        <div class="column-header">
+          <div class="column-header-left">
+            <div class="col-badge immediate"></div>
+            <h3>⚡ Phản Hồi HTTP Ngay Lập Tức</h3>
+          </div>
+          <span class="col-count" id="imm-count">0 requests</span>
+        </div>
+        <div class="request-list" id="list-immediate">
+          <div class="empty-state">
+            <div class="icon">⚡</div>
+            <p>Nhấn "Bắn Requests!" để thấy<br>phản hồi HTTP xuất hiện theo thời gian thực</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Background Processing -->
+      <div class="column-panel">
+        <div class="column-header">
+          <div class="column-header-left">
+            <div class="col-badge background"></div>
+            <h3>🔧 Xử Lý Ngầm (Background)</h3>
+          </div>
+          <span class="col-count" id="bg-count">0 tasks</span>
+        </div>
+        <div class="request-list" id="list-background">
+          <div class="empty-state">
+            <div class="icon">🔧</div>
+            <p>Sau khi HTTP phản hồi xong, server<br>vẫn đang xử lý ảnh ở background...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+
+  <script>
+    // ===================================================
+    // 🔧 CẤU HÌNH API BASE URL
+    // Thay đổi server URL trực tiếp trên ô input ở Header.
+    // Toàn bộ API call trong file này đều đọc từ getApiBase() — không có URL cứng nào khác!
+    // ===================================================
+    function getApiBase() {
+      return (document.getElementById('api-base-input').value || window.location.origin).replace(/\/$/, '');
+    }
+
+    function onServerUrlChange() {
+      localStorage.setItem('demo_api_base', getApiBase());
+      checkServer();
+    }
+
+    // Đặt URL mặc định tự động theo domain đang mở file này.
+    // Nếu trước đó đã đổi và lưu, khôi phục lại cài đó.
+    // VD: Mở từ http://myserver.com:8081/dashboard.html → tự đặt http://myserver.com:8081
+    (function restoreUrl() {
+      const input = document.getElementById('api-base-input');
+      const saved = localStorage.getItem('demo_api_base');
+      input.value = saved || window.location.origin; // ← Auto-detect domain hiện tại
+    })();
+
+    let stats = { total: 0, running: 0, success: 0, fail: 0, bgDone: 0, latencies: [] };
+    let pipelineCounts = { queued: 0, http: 0, httpDone: 0, bg: 0, complete: 0 };
+    let isFiring = false;
+
+    // ===== CHECK SERVER =====
+    async function checkServer() {
+      const base = getApiBase();
+      try {
+        const r = await fetch(`${base}/actuator/health`, { signal: AbortSignal.timeout(2000) });
+        if (r.ok) { setServerStatus(true, base); return; }
+      } catch (_) { }
+      try {
+        await fetch(`${base}/posts/00000000-0000-0000-0000-000000000001`, { signal: AbortSignal.timeout(2000) });
+        setServerStatus(true, base);
+      } catch (_) { setServerStatus(false, base); }
+    }
+    function setServerStatus(online, base) {
+      const dot = document.getElementById('dot-status');
+      const lbl = document.getElementById('server-label');
+      const host = (base || getApiBase()).replace('http://', '').replace('https://', '');
+      if (online) {
+        dot.classList.remove('offline');
+        lbl.textContent = `${host} ✓ Online`;
+      } else {
+        dot.classList.add('offline');
+        lbl.textContent = `${host} ✗ Offline`;
+      }
+    }
+    checkServer();
+    setInterval(checkServer, 10000);
+
+    // ===== GENERATE FAKE IMAGE =====
+    function generateFakeImage(index) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 100; canvas.height = 100;
+      const ctx = canvas.getContext('2d');
+      const hue = (index * 47 + 180) % 360;
+      ctx.fillStyle = `hsl(${hue}, 70%, 40%)`;
+      ctx.fillRect(0, 0, 100, 100);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(`#${index}`, 50, 58);
+      return new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.8));
+    }
+
+    // ===== VIRTUAL DOM: Chỉ render tối đa MAX_VISIBLE cards =====
+    const MAX_VISIBLE = 200; // Giới hạn DOM nodes để tránh nổ RAM trình duyệt
+    let immHidden = 0, bgHidden = 0;
+
+    function pruneList(listId, hiddenCounter, setHidden) {
+      const list = document.getElementById(listId);
+      const cards = list.querySelectorAll('.req-card');
+      if (cards.length > MAX_VISIBLE) {
+        const excess = cards.length - MAX_VISIBLE;
+        for (let i = 0; i < excess; i++) cards[cards.length - 1 - i].remove();
+        setHidden(hiddenCounter + excess);
+        let notice = list.querySelector('.dom-notice');
+        if (!notice) { notice = document.createElement('div'); notice.className = 'dom-notice'; list.appendChild(notice); }
+        notice.textContent = `⚠️ Đang hiển thị ${MAX_VISIBLE} card mới nhất — ${hiddenCounter + excess} card cũ hơn đã ẩn để tiết kiệm RAM`;
+      }
+    }
+
+    // ===== FIRE REQUESTS =====
+    async function startFireRequests() {
+      if (isFiring) return;
+
+      const total = parseInt(document.getElementById('req-count').value) || 20;
+      const concurrency = Math.min(parseInt(document.getElementById('concurrency').value) || 50, 500);
+      const imgCount = parseInt(document.getElementById('img-count').value) || 2;
+      const mode = document.getElementById('api-mode').value;
+
+      // Cảnh báo khi bắn quá lớn
+      if (total > 500) {
+        const ok = confirm(
+          `⚠️ BẠN ĐANG BẮN ${total} REQUESTS!\n\n` +
+          `Trình duyệt sẽ tạo ${total} kết nối HTTP đồng thời.\n` +
+          `Concurrency hiện tại: ${concurrency} request/batch.\n\n` +
+          `RAM máy tính có thể bị quá tải.\nBạn có chắc muốn tiếp tục không?`
+        );
+        if (!ok) return;
+      }
+
+      isFiring = true;
+      document.getElementById('btn-fire').disabled = true;
+      immHidden = 0; bgHidden = 0;
+
+      // Clear empty state
+      clearEmptyStates();
+      showProgress(true, 0, total);
+      stats = { total, running: 0, success: 0, fail: 0, bgDone: 0, latencies: [] };
+      pipelineCounts = { queued: total, http: 0, httpDone: 0, bg: 0, complete: 0 };
+      updateAllStats();
+      updatePipeline();
+
+      // Pre-generate images once
+      toast(`🚀 Đang chuẩn bị ${total} requests (${imgCount} ảnh/bài) — Batch size: ${concurrency}...`);
+      const blobs = [];
+      for (let i = 0; i < imgCount; i++) blobs.push(await generateFakeImage(i + 1));
+
+      toast(`⚡ Bắn ${total} requests — ${concurrency} concurrent mỗi batch...`);
+
+      // ===================================================
+      // BATCHING: Thay vì bắn 20.000 cùng lúc (nổ RAM),
+      // ta chia thành từng đợt nhỏ (VD: 50/đợt).
+      // Đây chính là kỹ thuật dùng trong production!
+      // ===================================================
+      for (let i = 0; i < total; i += concurrency) {
+        const batchEnd = Math.min(i + concurrency, total);
+        const batch = [];
+        for (let j = i; j < batchEnd; j++) {
+          batch.push(fireOneRequest(j + 1, mode, blobs, total));
+        }
+        await Promise.allSettled(batch);
+        // Prune DOM sau mỗi batch để giữ trình duyệt sống
+        pruneList('list-immediate', immHidden, (n) => immHidden = n);
+        pruneList('list-background', bgHidden, (n) => bgHidden = n);
+      }
+
+      isFiring = false;
+      document.getElementById('btn-fire').disabled = false;
+      showProgress(false, 0, 0);
+      toast(`🎉 Hoàn thành! ${stats.success} thành công / ${stats.fail} thất bại`);
+    }
+
+    async function fireOneRequest(idx, mode, blobs, total) {
+      // Add pending card
+      addImmediateCard(idx, 'pending', '', '', null);
+      pipelineCounts.queued = Math.max(0, pipelineCounts.queued - 1);
+      pipelineCounts.http++;
+      stats.running++;
+      updateImmediateCard(idx, 'running', '', '');
+      updateAllStats(); updatePipeline();
+
+      const t0 = performance.now();
+      try {
+        if (mode === 'async') {
+          await fireAsync(idx, blobs, t0, total);
+        } else {
+          await fireSync(idx, blobs, t0, total);
+        }
+      } catch (e) {
+        const ms = Math.round(performance.now() - t0);
+        stats.running--; stats.fail++;
+        pipelineCounts.http--;
+        updateImmediateCard(idx, 'error', ms + 'ms', e.message || 'Network error');
+        updateAllStats(); updatePipeline();
+        updateProgress(stats.success + stats.fail, total);
+      }
+    }
+
+    async function fireSync(idx, blobs, t0, total) {
+      const postData = { title: `Bài viết #${idx}`, content: `Nội dung demo request số ${idx}` };
+      const form = new FormData();
+      form.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }));
+      blobs.forEach((b, i) => form.append('files', b, `img_${idx}_${i + 1}.jpg`));
+
+      const r = await fetch(`${getApiBase()}/posts/full`, { method: 'POST', body: form });
+      const ms = Math.round(performance.now() - t0);
+      const data = await r.json().catch(() => ({}));
+
+      stats.running--; pipelineCounts.http--;
+      if (r.ok) {
+        stats.success++;
+        stats.latencies.push(ms);
+        pipelineCounts.httpDone++;
+        updateImmediateCard(idx, 'done', ms + 'ms', `POST #${data.id?.substring(0, 8) || idx} — SYNC (Block đến khi xong!)`);
+        // Sync = no background, mark complete
+        pipelineCounts.complete++;
+        pipelineCounts.httpDone = Math.max(0, pipelineCounts.httpDone - 1);
+        addBackgroundCard(idx, 'bg-done', '0ms', 'Sync: không có background — đã block hoàn toàn');
+        stats.bgDone++;
+      } else {
+        stats.fail++;
+        updateImmediateCard(idx, 'error', ms + 'ms', `HTTP ${r.status}`);
+      }
+      updateAllStats(); updatePipeline();
+      updateProgress(stats.success + stats.fail, total);
+    }
+
+    async function fireAsync(idx, blobs, t0, total) {
+      // Step 1: Create post
+      const postData = { title: `Bài viết #${idx}`, content: `Nội dung demo request số ${idx}` };
+      const r1 = await fetch(`${getApiBase()}/posts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData)
+      });
+      const ms1 = Math.round(performance.now() - t0);
+      const d1 = await r1.json().catch(() => ({}));
+      const postId = d1.postId;
+
+      stats.running--; pipelineCounts.http--;
+      if (!r1.ok || !postId) {
+        stats.fail++;
+        updateImmediateCard(idx, 'error', ms1 + 'ms', `Lỗi tạo bài: HTTP ${r1.status}`);
+        updateAllStats(); updatePipeline();
+        updateProgress(stats.success + stats.fail, total);
+        return;
+      }
+
+      stats.success++; stats.latencies.push(ms1);
+      pipelineCounts.httpDone++;
+      updateImmediateCard(idx, 'done', ms1 + 'ms', `POST #${postId.substring(0, 8)} — HTTP Phản hồi ngay!`);
+      updateAllStats(); updatePipeline();
+      updateProgress(stats.success + stats.fail, total);
+
+      // Step 2: Upload images (this returns 202 immediately)
+      const t2 = performance.now();
+      const form = new FormData();
+      blobs.forEach((b, i) => form.append('files', b, `img_${idx}_${i + 1}.jpg`));
+
+      // Add background card immediately
+      addBackgroundCard(idx, 'processing', '', `Đang upload ${blobs.length} ảnh cho Post #${postId.substring(0, 8)}...`);
+      pipelineCounts.bg++;
+      pipelineCounts.httpDone = Math.max(0, pipelineCounts.httpDone - 1);
+      updatePipeline();
+
+      try {
+        const r2 = await fetch(`${getApiBase()}/posts/${postId}/images`, { method: 'POST', body: form });
+        const ms2 = Math.round(performance.now() - t2);
+        // Server returned 202 almost instantly
+        if (r2.ok || r2.status === 202) {
+          // Simulate the background processing time (500ms per image + overhead)
+          const estimatedBgMs = blobs.length * 500 + Math.random() * 300;
+          updateBackgroundCard(idx, 'processing', ms2 + 'ms', `Accepted! Server đang ghi ${blobs.length} ảnh ngầm... (~${Math.round(estimatedBgMs)}ms nữa)`);
+          // After estimated time, mark as done
+          setTimeout(() => {
+            const totalBgMs = Math.round(estimatedBgMs + ms2);
+            updateBackgroundCard(idx, 'bg-done', totalBgMs + 'ms', `✅ ${blobs.length} ảnh đã ghi xong vào Server!`);
+            pipelineCounts.bg = Math.max(0, pipelineCounts.bg - 1);
+            pipelineCounts.complete++;
+            stats.bgDone++;
+            updateAllStats(); updatePipeline();
+          }, estimatedBgMs);
+        } else {
+          updateBackgroundCard(idx, 'error', ms2 + 'ms', `Upload thất bại: HTTP ${r2.status}`);
+          pipelineCounts.bg = Math.max(0, pipelineCounts.bg - 1);
+          updatePipeline();
+        }
+      } catch (e) {
+        updateBackgroundCard(idx, 'error', '', 'Network error khi upload ảnh');
+        pipelineCounts.bg = Math.max(0, pipelineCounts.bg - 1);
+        updatePipeline();
+      }
+    }
+
+    // ===== DOM HELPERS =====
+    let immCards = {};
+    let bgCards = {};
+
+    function clearEmptyStates() {
+      document.getElementById('list-immediate').innerHTML = '';
+      document.getElementById('list-background').innerHTML = '';
+      immCards = {}; bgCards = {};
+    }
+
+    function addImmediateCard(idx, status, time, detail) {
+      const list = document.getElementById('list-immediate');
+      const div = document.createElement('div');
+      div.id = `imm-${idx}`;
+      div.className = `req-card ${status}`;
+      div.innerHTML = cardHTML(idx, status, time, detail);
+      list.prepend(div);
+      immCards[idx] = div;
+      document.getElementById('imm-count').textContent = `${Object.keys(immCards).length} requests`;
+    }
+
+    function updateImmediateCard(idx, status, time, detail) {
+      const div = immCards[idx];
+      if (!div) return;
+      div.className = `req-card ${status}`;
+      div.innerHTML = cardHTML(idx, status, time, detail);
+    }
+
+    function addBackgroundCard(idx, status, time, detail) {
+      const list = document.getElementById('list-background');
+      const div = document.createElement('div');
+      div.id = `bg-${idx}`;
+      div.className = `req-card ${status}`;
+      div.innerHTML = cardHTML(idx, status, time, detail);
+      list.prepend(div);
+      bgCards[idx] = div;
+      document.getElementById('bg-count').textContent = `${Object.keys(bgCards).length} tasks`;
+    }
+
+    function updateBackgroundCard(idx, status, time, detail) {
+      const div = bgCards[idx];
+      if (!div) return;
+      div.className = `req-card ${status}`;
+      div.innerHTML = cardHTML(idx, status, time, detail);
+    }
+
+    function cardHTML(idx, status, time, detail) {
+      const icons = { pending: '⏳', running: '⚡', done: '✅', error: '❌', processing: '⚙️', 'bg-done': '✅' };
+      const labels = { pending: 'Pending', running: 'Running', done: 'Done', error: 'Error', processing: 'BG Running', 'bg-done': 'BG Done' };
+      const spinner = (status === 'running' || status === 'processing')
+        ? `<span class="spinner-sm ${status === 'processing' ? 'purple' : ''}"></span>` : '';
+      return `
+    <div class="req-id">#${idx}</div>
+    <div class="req-info">
+      <div class="req-title">${icons[status] || '•'} Request ${idx} ${spinner}</div>
+      <div class="req-meta">${detail || 'Đang xử lý...'}</div>
+    </div>
+    <div class="req-status">
+      <span class="status-badge ${status}">${labels[status] || status}</span>
+      ${time ? `<span class="req-time">${time}</span>` : ''}
+    </div>`;
+    }
+
+    function updateAllStats() {
+      document.getElementById('s-total').textContent = stats.total;
+      document.getElementById('s-running').textContent = stats.running;
+      document.getElementById('s-success').textContent = stats.success;
+      document.getElementById('s-fail').textContent = stats.fail;
+      document.getElementById('s-bg-done').textContent = stats.bgDone;
+      const avg = stats.latencies.length
+        ? Math.round(stats.latencies.reduce((a, b) => a + b, 0) / stats.latencies.length)
+        : null;
+      document.getElementById('s-latency').textContent = avg ? avg + 'ms' : '—';
+    }
+
+    function updatePipeline() {
+      document.getElementById('p-queued-n').textContent = Math.max(0, pipelineCounts.queued);
+      document.getElementById('p-http-n').textContent = Math.max(0, pipelineCounts.http);
+      document.getElementById('p-http-done-n').textContent = Math.max(0, pipelineCounts.httpDone);
+      document.getElementById('p-bg-n').textContent = Math.max(0, pipelineCounts.bg);
+      document.getElementById('p-complete-n').textContent = Math.max(0, pipelineCounts.complete);
+      ['p-queued', 'p-http', 'p-http-done', 'p-bg', 'p-complete'].forEach(id => {
+        const el = document.getElementById(id);
+        const n = parseInt(document.getElementById(id + '-n').textContent);
+        el.classList.toggle('active', n > 0);
+      });
+    }
+
+    function showProgress(show, current, total) {
+      const wrap = document.getElementById('progress-wrap');
+      wrap.style.display = show ? 'flex' : 'none';
+      if (show) updateProgress(current, total);
+    }
+
+    function updateProgress(current, total) {
+      const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+      document.getElementById('progress-inner').style.width = pct + '%';
+      document.getElementById('progress-label').textContent = `${current} / ${total} (${pct}%)`;
+    }
+
+    function clearAll() {
+      document.getElementById('list-immediate').innerHTML = `<div class="empty-state"><div class="icon">⚡</div><p>Nhấn "Bắn Requests!" để thấy<br>phản hồi HTTP xuất hiện theo thời gian thực</p></div>`;
+      document.getElementById('list-background').innerHTML = `<div class="empty-state"><div class="icon">🔧</div><p>Sau khi HTTP phản hồi xong, server<br>vẫn đang xử lý ảnh ở background...</p></div>`;
+      immCards = {}; bgCards = {};
+      stats = { total: 0, running: 0, success: 0, fail: 0, bgDone: 0, latencies: [] };
+      pipelineCounts = { queued: 0, http: 0, httpDone: 0, bg: 0, complete: 0 };
+      document.getElementById('imm-count').textContent = '0 requests';
+      document.getElementById('bg-count').textContent = '0 tasks';
+      updateAllStats(); updatePipeline();
+      showProgress(false, 0, 0);
+    }
+
+    function toast(msg) {
+      const el = document.createElement('div');
+      el.className = 'toast-msg';
+      el.textContent = msg;
+      document.getElementById('toast').appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+  </script>
+</body>
+
+</html>
