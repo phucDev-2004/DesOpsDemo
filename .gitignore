@@ -42,3 +42,9 @@ build/
 .test-upload/
 *csv
 
+### Environment / Secrets ###
+# KHÔNG commit file .env — chứa password thật
+# Chỉ commit .env.example làm template
+.env
+uploads/
+test-uploads/
