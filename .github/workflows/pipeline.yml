@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/desops-demo
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/devops-demo
 
 jobs:
   test:
@@ -74,14 +74,14 @@ jobs:
       - name: 🚀 Deploy
         run: |
           set -e
-          CURRENT_IMAGE=$(docker inspect desops_app --format='{{.Config.Image}}' 2>/dev/null || echo "none")
+          CURRENT_IMAGE=$(docker inspect devops_app --format='{{.Config.Image}}' 2>/dev/null || echo "none")
 
           docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}
           export DOCKER_IMAGE=${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}
           docker compose down && docker compose up -d
 
           sleep 20
-          if ! curl --fail --silent http://localhost:8081/actuator/health; then
+          if ! curl --fail --silent http://localhost:8081/; then
             echo "❌ Health check failed! Rolling back to $CURRENT_IMAGE..."
             export DOCKER_IMAGE=$CURRENT_IMAGE
             docker compose up -d
