@@ -81,7 +81,7 @@ jobs:
           docker compose down && docker compose up -d
 
           sleep 20
-          if ! curl --fail --silent http://localhost:8085/; then
+          if ! curl --fail --silent http://localhost:8085/app/dashboard.html; then
             echo "❌ Health check failed! Rolling back to $CURRENT_IMAGE..."
             export DOCKER_IMAGE=$CURRENT_IMAGE
             docker compose up -d
